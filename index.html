@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Bayesiano Avanzado</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <link href="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Arial', sans-serif;
+        }
+        .card-custom {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        .card-custom:hover {
+            transform: scale(1.02);
+        }
+        .slider-value {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+            margin-left: 10px;
+        }
+        .modal-header {
+            background-color: #6a11cb;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">
+                    🧠 Análisis Bayesiano Avanzado (ABA)
+                </h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Factor de Bayes -->
+            <div class="col-md-4">
+                <div class="card card-custom">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title">Factor de Bayes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Datos de Entrada</label>
+                            <textarea id="bayesData" class="form-control" rows="4" 
+                                placeholder="Ingrese datos separados por comas"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Hipótesis H0</label>
+                                <select id="h0Select" class="form-select">
+                                    <option value="normal">Distribución Normal</option>
+                                    <option value="uniform">Distribución Uniforme</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Hipótesis H1</label>
+                                <select id="h1Select" class="form-select">
+                                    <option value="normal">Distribución Normal</option>
+                                    <option value="uniform">Distribución Uniforme</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="calcBayesFactor" class="btn btn-primary w-100 mt-3">
+                            Calcular Factor de Bayes
+                        </button>
+                        <div id="bayesFactorResult" class="mt-3 alert alert-info"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generación de Ruido -->
+            <div class="col-md-4">
+                <div class="card card-custom">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title">Generador de Ruido</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Ruido</label>
+                            <select id="noiseType" class="form-select">
+                                <option value="gaussian">Ruido Gaussiano</option>
+                                <option value="uniform">Ruido Uniforme</option>
+                                <option value="perlin">Ruido Perlin</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Amplitud</label>
+                                <input type="number" id="amplitude" class="form-control" value="1.0" step="0.1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Frecuencia</label>
+                                <input type="number" id="frequency" class="form-control" value="1.0" step="0.1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Fase</label>
+                                <input type="number" id="phase" class="form-control" value="0.0" step="0.1">
+                            </div>
+                        </div>
+                        <button id="generateNoise" class="btn btn-success w-100 mt-3">
+                            Generar Ruido
+                        </button>
+                        <canvas id="noiseChart" class="mt-3"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inferencia Bayesiana -->
+            <div class="col-md-4">
+                <div class="card card-custom">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="card-title">Inferencia Bayesiana</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Probabilidad Previa H1</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="priorH1" class="form-range flex-grow-1" min="0" max="1" step="0.01" value="0.5">
+                                <span id="priorH1Value" class="slider-value">0.50</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Probabilidad Previa H2</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="priorH2" class="form-range flex-grow-1" min="0" max="1" step="0.01" value="0.5">
+                                <span id="priorH2Value" class="slider-value">0.50</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Verosimilitud Evidencia 1 (H1)</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="likelihood1H1" class="form-range flex-grow-1" min="0" max="1" step="0.01" value="0.7">
+                                <span id="likelihood1H1Value" class="slider-value">0.70</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Verosimilitud Evidencia 1 (H2)</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="likelihood1H2" class="form-range flex-grow-1" min="0" max="1" step="0.01" value="0.3">
+                                <span id="likelihood1H2Value" class="slider-value">0.30</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Verosimilitud Evidencia 2 (H1)</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="likelihood2H1" class="form-range flex-grow-1" min="0" max="1" step="0.01" value="0.4">
+                                <span id="likelihood2H1Value" class="slider-value">0.40</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Verosimilitud Evidencia 2 (H2)</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="likelihood2H2" class="form-range flex-grow-1" min="0" max="1" step="0.01" value="0.6">
+                                <span id="likelihood2H2Value" class="slider-value">0.60</span>
+                            </div>
+                        </div>
+                        
+                        <button id="performInference" class="btn btn-warning w-100">
+                            Realizar Inferencia
+                        </button>
+                        <div id="inferenceResult" class="mt-3 alert alert-success"></div>
+                        <canvas id="inferenceChart" class="mt-3"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Resultados Almacenados -->
+        <div class="modal fade" id="storedResultsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Resultados Almacenados</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="storedResultsBody">
+                        <!-- Resultados almacenados se insertarán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Script de Análisis Bayesiano -->
+    <script type="module">
+        import { 
+            BayesianAnalytics, 
+            DataVisualizer, 
+            EventInitializer 
+        } from './bayesian-advanced-analytics.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const analytics = new BayesianAnalytics();
+            const visualizer = new DataVisualizer();
+            const eventInitializer = new EventInitializer(analytics, visualizer);
+            
+            eventInitializer.initializeAllEvents();
+
+            // Botón para ver resultados almacenados
+            document.getElementById('viewStoredResults').addEventListener('click', () => {
+                const storedResults = analytics.getStoredResults();
+                const resultsBody = document.getElementById('storedResultsBody');
+                
+                // Limpiar resultados anteriores
+                resultsBody.innerHTML = '';
+
+                // Mostrar resultados
+                if (storedResults.length === 0) {
+                    resultsBody.innerHTML = '<p>No hay resultados almacenados.</p>';
+                } else {
+                    const table = document.createElement('table');
+                    table.className = 'table table-striped';
+                    table.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Resultado</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${storedResults.map(([id, entry]) => `
+                                <tr>
+                                    <td>${entry.type}</td>
+                                    <td>${JSON.stringify(entry.result)}</td>
+                                    <td>${new Date(entry.timestamp).toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    `;
+                    resultsBody.appendChild(table);
+                }
+
+                // Mostrar modal
+                const storedResultsModal = new bootstrap.Modal(document.getElementById('storedResultsModal'));
+                storedResultsModal.show();
+            });
+        });
+    </script>
+</body>
+</html>
